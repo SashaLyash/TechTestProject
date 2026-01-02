@@ -166,8 +166,7 @@ sub onDebounceTimerFired(event as object)
     if m.pendingSearchTerm <> invalid
         searchTerm = m.pendingSearchTerm
         m.pendingSearchTerm = invalid
-        ' Search will be executed, UI update will be added in later PR
-        searchChannels(searchTerm)
+        updateChannelList(searchChannels(searchTerm))
     end if
 end sub
 
@@ -203,8 +202,7 @@ sub onKeyboardTextChanged(event as object)
     if searchTerm <> ""
         searchDebounced(searchTerm)
     else
-        ' Show all channels - UI update will be added in later PR
-        searchChannels("")
+        updateChannelList(m.channels)
     end if
 end sub
 
@@ -216,6 +214,42 @@ sub performSearch(searchTerm as string)
     end if
 
     m.searchTermLabel.text = "Search Term: " + searchTerm
-    ' Search will be executed, UI update will be added in later PR
-    searchChannels(searchTerm)
+    updateChannelList(searchChannels(searchTerm))
+end sub
+
+' updateChannelList: Updates the UI with search results
+' Limits display to 50 items for performance, shows count of remaining if more exist
+sub updateChannelList(channels as object)
+    if channels = invalid
+        channels = []
+    end if
+
+    m.resultsCountLabel.text = "Results: " + channels.Count().ToStr()
+
+    contentNode = CreateObject("roSGNode", "ContentNode")
+
+    if channels.Count() = 0
+        m.channelList.content = contentNode
+        return
+    end if
+
+    maxDisplay = 50
+    endIndex = maxDisplay - 1
+    if channels.Count() < maxDisplay
+        endIndex = channels.Count() - 1
+    end if
+
+    for i = 0 to endIndex
+        channel = channels[i]
+        itemNode = contentNode.CreateChild("ContentNode")
+        displayText = channel.title + " (" + channel.category + ")"
+        itemNode.title = displayText
+    end for
+
+    if channels.Count() > maxDisplay
+        itemNode = contentNode.CreateChild("ContentNode")
+        itemNode.title = "... and " + (channels.Count() - maxDisplay).ToStr() + " more results"
+    end if
+
+    m.channelList.content = contentNode
 end sub

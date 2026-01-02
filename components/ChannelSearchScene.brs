@@ -7,6 +7,7 @@ sub init()
     initUI()
     addObservers()
     setFocus()
+    initializeDebounceTimer()
 
     if m.top.channels <> invalid
         loadChannels()
@@ -125,3 +126,44 @@ function searchChannels(searchTerm as string) as object
     return results
 end function
 
+
+' initializeDebounceTimer: Creates debounce timer once during initialization
+' Timer is reused by stopping and restarting, preventing garbage collection overhead
+sub initializeDebounceTimer()
+    m.debounceTimer = CreateObject("roSGNode", "Timer")
+    m.debounceTimer.duration = 0.3
+    m.debounceTimer.repeat = false
+    m.debounceTimer.ObserveField("fire", "onDebounceTimerFired")
+    m.pendingSearchTerm = invalid
+end sub
+
+' searchDebounced: Implements debounce mechanism to prevent excessive processing
+'
+' Requirements: Debounce to prevent excessive processing during typing
+' Cancels previous timer if new search comes in quickly (300ms delay)
+' Prevents UI blocking during quick typing
+'
+' Timer Lifecycle Optimization: Reuses existing timer by stopping and restarting
+' instead of creating new Timer nodes, preventing garbage collection overhead
+'
+' searchTerm - Search query string
+sub searchDebounced(searchTerm as string)
+    if m.debounceTimer = invalid
+        return
+    end if
+    m.debounceTimer.control = "stop"
+    m.pendingSearchTerm = searchTerm
+    m.debounceTimer.control = "start"
+end sub
+
+' onDebounceTimerFired: Event handler for debounce timer
+' Executes the pending search when timer fires after debounce delay
+' Timer remains valid for reuse in subsequent searches
+sub onDebounceTimerFired(event as object)
+    if m.pendingSearchTerm <> invalid
+        searchTerm = m.pendingSearchTerm
+        m.pendingSearchTerm = invalid
+        ' Search will be executed, UI update will be added in later PR
+        searchChannels(searchTerm)
+    end if
+end sub

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ChannelSearchScene" extends="Scene">
+
+    <interface>
+        <field id="searchTerm" type="string" />
+        <field id="results" type="node" />
+        <field id="channels" type="array" />
+    </interface>
+
+    <script type="text/brightscript" uri="pkg:/components/ChannelSearchScene.brs" />
+
+    <children>
+        <!-- Background -->
+        <Rectangle id="background" width="1920" height="1080" color="0x000000FF" />
+
+        <!-- Title -->
+        <Label id="titleLabel" translation="[500, 50]" horizAlign="center" vertAlign="center" text="Channel Search Test" font="font:LargeBoldSystemFont" color="0xFFFFFFFF" />
+
+        <!-- Search Button -->
+        <Button id="searchButton" height="80" translation="[500, 100]" text="Press OK to Search" />
+
+        <!-- Search Term Display -->
+        <Label id="searchTermLabel" translation="[500, 200]" horizAlign="center" vertAlign="center" text="Search Term: (none)" font="font:MediumSystemFont" color="0xCCCCCCFF" />
+
+        <!-- Results Count -->
+        <Label id="resultsCountLabel" translation="[500, 250]" horizAlign="center" vertAlign="center" text="Results: 0" font="font:MediumSystemFont" color="0xCCCCCCFF" />
+
+        <!-- Channel List -->
+        <LabelList id="channelList" translation="[0, 440]" itemSize="[1860, 80]" itemSpacing="[0, 10]" />
+
+        <!-- Search Input -->
+        <KeyboardDialog id="searchKeyboard" title="Search Channels" message="Enter search term" buttons='["Search", "Cancel"]' text="" visible="false" />
+
+        <script type="text/brightscript" uri="pkg:/components/ChannelSearchScene.brs" />
+    </children>
+
+</component>

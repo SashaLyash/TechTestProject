@@ -27,6 +27,9 @@ end sub
 
 ' addObservers: Attaches event observers to UI components
 sub addObservers()
+    m.searchButton.ObserveField("buttonSelected", "onSearchButtonPressed")
+    m.searchKeyboard.ObserveField("buttonSelected", "onKeyboardButtonSelected")
+    m.searchKeyboard.ObserveField("text", "onKeyboardTextChanged")
     m.top.ObserveField("channels", "onChannelsSet")
 end sub
 
@@ -166,4 +169,53 @@ sub onDebounceTimerFired(event as object)
         ' Search will be executed, UI update will be added in later PR
         searchChannels(searchTerm)
     end if
+end sub
+
+' onSearchButtonPressed: Handles search button press event
+' Shows the keyboard dialog for user input
+sub onSearchButtonPressed(event as object)
+    m.searchKeyboard.visible = true
+    m.searchKeyboard.text = ""
+    m.searchKeyboard.SetFocus(true)
+end sub
+
+' onKeyboardButtonSelected: Handles keyboard dialog button selection
+' Button 0 = Search, triggers immediate search
+sub onKeyboardButtonSelected(event as object)
+    if event.GetData() = 0
+        performSearch(m.searchKeyboard.text)
+    end if
+    m.searchKeyboard.visible = false
+    m.searchButton.SetFocus(true)
+end sub
+
+' onKeyboardTextChanged: Handles text input changes in keyboard dialog
+' Updates search term display and triggers debounced search as user types
+' Shows all channels if search term is cleared
+sub onKeyboardTextChanged(event as object)
+    searchTerm = event.GetData()
+    m.searchTermLabel.text = "Search Term: " + searchTerm
+
+    if m.channels = invalid or m.normalizedChannels = invalid
+        return
+    end if
+
+    if searchTerm <> ""
+        searchDebounced(searchTerm)
+    else
+        ' Show all channels - UI update will be added in later PR
+        searchChannels("")
+    end if
+end sub
+
+' performSearch: Executes immediate search without debounce
+' Used when user explicitly presses the Search button
+sub performSearch(searchTerm as string)
+    if m.channels = invalid or m.normalizedChannels = invalid
+        return
+    end if
+
+    m.searchTermLabel.text = "Search Term: " + searchTerm
+    ' Search will be executed, UI update will be added in later PR
+    searchChannels(searchTerm)
 end sub

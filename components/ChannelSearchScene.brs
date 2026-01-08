@@ -52,7 +52,7 @@ sub loadChannels()
     end if
 end sub
 
-' normalizeChannels: Pre-normalizes channel titles and categories to lowercase
+' normalizeChannels: Pre-normalizes channel titles to lowercase
 ' This optimization allows case-insensitive search without repeated LCase() calls
 ' Performed once during initialization for optimal performance
 ' Stores index reference to original channel for memory-efficient result returns
@@ -66,7 +66,6 @@ sub normalizeChannels()
         m.normalizedChannels.Push({
             index: index
             normalizedTitle: LCase(channel.title)
-            normalizedCategory: LCase(channel.category)
         })
         index = index + 1
     end for
@@ -121,8 +120,39 @@ function searchChannels(searchTerm as string) as object
     end if
 
     for each normalizedChannel in m.normalizedChannels
-        if Instr(1, normalizedChannel.normalizedTitle, normalizedSearchTerm) > 0 or Instr(1, normalizedChannel.normalizedCategory, normalizedSearchTerm) > 0
-            results.Push(m.channels[normalizedChannel.index])
+        channel = m.channels[normalizedChannel.index]
+
+        ' Match by title
+        if Instr(1, normalizedChannel.normalizedTitle, normalizedSearchTerm) > 0
+            results.Push(channel)
+            continue for
+        end if
+
+        ' Match by category name
+        if channel.category <> invalid and channel.category.name <> invalid
+            normalizedCategory = LCase(channel.category.name)
+            if Instr(1, normalizedCategory, normalizedSearchTerm) > 0
+                results.Push(channel)
+                continue for
+            end if
+        end if
+
+        ' Match by subCategory name
+        if channel.category <> invalid and channel.category.subCategory <> invalid and channel.category.subCategory.name <> invalid
+            normalizedSubCategory = LCase(channel.category.subCategory.name)
+            if Instr(1, normalizedSubCategory, normalizedSearchTerm) > 0
+                results.Push(channel)
+                continue for
+            end if
+        end if
+
+        ' Match by subSubCategory name
+        if channel.category <> invalid and channel.category.subCategory <> invalid and channel.category.subCategory.subCategory <> invalid and channel.category.subCategory.subCategory.name <> invalid
+            normalizedSubSubCategory = LCase(channel.category.subCategory.subCategory.name)
+            if Instr(1, normalizedSubSubCategory, normalizedSearchTerm) > 0
+                results.Push(channel)
+                continue for
+            end if
         end if
     end for
 
@@ -242,7 +272,18 @@ sub updateChannelList(channels as object)
     for i = 0 to endIndex
         channel = channels[i]
         itemNode = contentNode.CreateChild("ContentNode")
-        displayText = channel.title + " (" + channel.category + ")"
+
+        ' Build category display string from nested category structure
+        categoryDisplay = ""
+        if channel.category <> invalid and channel.category.name <> invalid
+            categoryDisplay = channel.category.name
+        end if
+
+        displayText = channel.title
+        if categoryDisplay <> ""
+            displayText = displayText + " (" + categoryDisplay + ")"
+        end if
+
         itemNode.title = displayText
     end for
 
